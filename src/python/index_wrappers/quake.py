@@ -112,6 +112,23 @@ class QuakeWrapper(IndexWrapper):
         assert ids.ndim == 1
         return self.index.remove(ids)
 
+    def modify_in_place(self, ids: torch.Tensor, vectors: torch.Tensor):
+        """
+        Modify vectors in place WITHOUT changing their partition assignment.
+
+        Updates vector data but keeps each vector in its original partition,
+        even if the new data is closer to a different centroid. Centroids are
+        not updated. This simulates stale partition assignments.
+
+        :param ids: The IDs of the vectors to modify.
+        :param vectors: The new vector data.
+        """
+        assert self.index is not None
+        assert ids.ndim == 1
+        assert vectors.ndim == 2
+        assert ids.shape[0] == vectors.shape[0]
+        return self.index.modify_in_place(ids, vectors)
+
     def search(
         self,
         query: torch.Tensor,

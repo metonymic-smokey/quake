@@ -144,6 +144,35 @@ shared_ptr<ModifyTimingInfo> QuakeIndex::modify(Tensor ids, Tensor x) {
     return add(x, ids);
 }
 
+shared_ptr<ModifyTimingInfo> QuakeIndex::modify_in_place(Tensor ids, Tensor x) {
+    if (!partition_manager_) {
+        throw std::runtime_error("[QuakeIndex::modify_in_place()] No partition manager. Build the index first.");
+    }
+
+    // Step 1: Get the OLD vectors so we can determine their current partition assignments
+    Tensor old_vectors = partition_manager_->get(ids);
+
+    // Step 2: Find current partition assignments by searching the parent (centroids)
+    Tensor assignments;
+    if (parent_ != nullptr) {
+        auto search_params = make_shared<SearchParams>();
+        search_params->k = 1;
+        search_params->nprobe = parent_->nlist();
+        if (ids.size(0) > 10) {
+            search_params->batched_scan = true;
+        }
+        auto parent_result = parent_->search(old_vectors, search_params);
+        assignments = parent_result->ids.squeeze(1);  // [n] — partition IDs
+    }
+
+    // Step 3: Remove old vectors
+    partition_manager_->remove(ids);
+
+    // Step 4: Add new vectors with the OLD partition assignments (forced)
+    auto modify_info = partition_manager_->add(x, ids, assignments);
+    modify_info->n_vectors = x.size(0);
+    return modify_info;
+}
 
 void QuakeIndex::initialize_maintenance_policy(shared_ptr<MaintenancePolicyParams> maintenance_policy_params) {
     maintenance_policy_params_ = maintenance_policy_params;

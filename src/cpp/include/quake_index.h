@@ -85,11 +85,24 @@ public:
     shared_ptr<ModifyTimingInfo> remove(Tensor ids);
 
     /**
-     * @brief In place modification of the index.
+     * @brief In place modification of the index (re-routes to nearest centroid).
      * @param ids Tensor of shape [num_ids].
      * @param x Tensor of shape [num_ids, dimension].
      */
     shared_ptr<ModifyTimingInfo> modify(Tensor ids, Tensor x);
+
+    /**
+     * @brief Modify vectors in place WITHOUT changing their partition assignment.
+     *
+     * Removes each vector, then re-adds it with its ORIGINAL partition assignment,
+     * even if the new vector data is closer to a different centroid. Centroids are
+     * not updated. This simulates stale partition assignments under streaming updates.
+     *
+     * @param ids Tensor of shape [num_ids].
+     * @param x Tensor of shape [num_ids, dimension] — new vector data.
+     * @return Timing information for the operation.
+     */
+    shared_ptr<ModifyTimingInfo> modify_in_place(Tensor ids, Tensor x);
 
     /**
      * @brief Initialize the maintenance policy.

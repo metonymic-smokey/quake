@@ -94,6 +94,14 @@ PYBIND11_MODULE(_bindings, m) {
              "Remove vectors from the index.\n\n"
              "Args:\n"
              "    ids (Tensor): Tensor of IDs to remove.")
+        .def("modify_in_place", &QuakeIndex::modify_in_place,
+             "Modify vectors in place WITHOUT changing partition assignments.\n\n"
+             "Updates vector data but keeps each vector in its original partition,\n"
+             "even if the new data is closer to a different centroid. Centroids are\n"
+             "not updated. Simulates stale partition assignments under streaming updates.\n\n"
+             "Args:\n"
+             "    ids (Tensor): Tensor of vector IDs to modify.\n"
+             "    x (Tensor): Tensor of new vector data.")
         .def("maintenance", &QuakeIndex::maintenance,
              "Perform maintenance operations on the index (e.g., splits and merges).\n"
              "Returns timing information for the maintenance operation.")

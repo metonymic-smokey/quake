@@ -99,11 +99,11 @@ def run_experiment_for_config(m_config, config):
     return results
 
 
-def run_experiments_and_compare():
+def run_experiments_and_compare(config_path=None):
     # Load the overall configuration.
     script_dir = Path(__file__).resolve().parent
-    # config_path = script_dir / Path("configs/sift1m_read_only.yaml")
-    config_path = script_dir / Path("configs/sift1m_write_heavy.yaml")
+    if config_path is None:
+        config_path = script_dir / Path("configs/sift1m_write_heavy.yaml")
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
@@ -149,4 +149,9 @@ def run_experiments_and_compare():
 
 
 if __name__ == "__main__":
-    run_experiments_and_compare()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default=None,
+                        help="Path to config YAML file")
+    args = parser.parse_args()
+    run_experiments_and_compare(config_path=args.config)
